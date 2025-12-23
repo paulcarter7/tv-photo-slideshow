@@ -18,6 +18,7 @@ const DEFAULT_CONFIG = {
     showLocation: true,
     showCameraInfo: false,
     position: 'bottom-left',
+    style: 'style-modern-blur',
     autoHide: false,
     autoHideDelay: 5
   }

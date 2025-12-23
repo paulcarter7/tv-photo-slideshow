@@ -18,6 +18,7 @@ function Settings({ config, onSave, onCancel }) {
     { name: 'exifDisplay.showLocation', label: 'Show Location', type: 'checkbox' },
     { name: 'exifDisplay.showCameraInfo', label: 'Show Camera Info', type: 'checkbox' },
     { name: 'exifDisplay.position', label: 'EXIF Position', type: 'select', options: ['bottom-left', 'bottom-right', 'top-left', 'top-right', 'bottom-center'] },
+    { name: 'exifDisplay.style', label: 'EXIF Style', type: 'select', options: ['style-modern-blur', 'style-minimal', 'style-rounded-box', 'style-film-strip', 'style-corner-tag'] },
     { name: 'exifDisplay.autoHide', label: 'Auto-hide EXIF', type: 'checkbox' },
     { name: 'exifDisplay.autoHideDelay', label: 'Auto-hide Delay (seconds)', type: 'number', min: 1, max: 60 }
   ];
@@ -103,6 +104,22 @@ function Settings({ config, onSave, onCancel }) {
     }
   };
 
+  const formatOptionLabel = (option, fieldName) => {
+    // Special formatting for EXIF style options
+    if (fieldName === 'exifDisplay.style') {
+      const styleNames = {
+        'style-modern-blur': 'Modern Blur',
+        'style-minimal': 'Clean Minimal',
+        'style-rounded-box': 'Rounded Box',
+        'style-film-strip': 'Film Strip Bar',
+        'style-corner-tag': 'Corner Tag'
+      };
+      return styleNames[option] || option;
+    }
+    // Default formatting
+    return option.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
   const renderField = (field) => {
     const value = getValue(field.name);
 
@@ -144,7 +161,7 @@ function Settings({ config, onSave, onCancel }) {
           >
             {field.options.map(option => (
               <option key={option} value={option}>
-                {option.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                {formatOptionLabel(option, field.name)}
               </option>
             ))}
           </select>

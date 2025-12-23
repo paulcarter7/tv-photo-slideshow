@@ -90,7 +90,7 @@ function ExifOverlay({ exifData, config }) {
 
   return (
     <div
-      className={`exif-overlay ${config.position} ${isVisible ? 'visible' : 'hidden'}`}
+      className={`exif-overlay ${config.style || 'style-modern-blur'} ${config.position} ${isVisible ? 'visible' : 'hidden'}`}
     >
       <div className="exif-content">
         {dateTime && (

@@ -1,12 +1,25 @@
-/* Ultra Minimal Style with Enhanced Readability */
+/* Base styles for all EXIF overlays */
 .exif-overlay {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
   z-index: 30;
   transition: opacity 0.5s ease, transform 0.5s ease;
   pointer-events: none;
+}
+
+.exif-overlay.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.exif-overlay.hidden {
+  opacity: 0;
+}
+
+/* Style 1: Modern Blur (Default) */
+.exif-overlay.style-modern-blur {
+  bottom: 0;
+  left: 0;
+  right: 0;
   padding: 20px 40px;
   background: linear-gradient(
     to top,
@@ -18,17 +31,7 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
-.exif-overlay.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.exif-overlay.hidden {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.exif-content {
+.exif-overlay.style-modern-blur .exif-content {
   display: flex;
   align-items: baseline;
   gap: 20px;
@@ -36,12 +39,11 @@
   max-width: 1400px;
 }
 
-.exif-item {
+.exif-overlay.style-modern-blur .exif-item {
   display: flex;
   align-items: baseline;
   gap: 6px;
   color: #ffffff;
-  /* Multi-layer shadow for maximum readability */
   text-shadow:
     0 1px 2px rgba(0, 0, 0, 0.8),
     0 2px 4px rgba(0, 0, 0, 0.6),
@@ -52,9 +54,112 @@
     -1px 1px 0 rgba(0, 0, 0, 0.9);
 }
 
+/* Style 2: Clean Minimal */
+.exif-overlay.style-minimal {
+  bottom: 30px;
+  left: 40px;
+  right: 40px;
+}
+
+.exif-overlay.style-minimal .exif-content {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.exif-overlay.style-minimal .exif-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  color: #ffffff;
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.9),
+    0 1px 3px rgba(0, 0, 0, 1);
+}
+
+/* Style 3: Rounded Box */
+.exif-overlay.style-rounded-box {
+  bottom: 20px;
+  left: 20px;
+  max-width: 400px;
+}
+
+.exif-overlay.style-rounded-box .exif-content {
+  padding: 20px 30px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.exif-overlay.style-rounded-box .exif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--text-primary);
+}
+
+/* Style 4: Film Strip Bar */
+.exif-overlay.style-film-strip {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 40px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.exif-overlay.style-film-strip .exif-content {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.exif-overlay.style-film-strip .exif-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+/* Style 5: Corner Tag */
+.exif-overlay.style-corner-tag {
+  bottom: 20px;
+  left: 20px;
+}
+
+.exif-overlay.style-corner-tag .exif-content {
+  padding: 10px 18px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.exif-overlay.style-corner-tag .exif-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ffffff;
+  font-size: 0.85rem;
+}
+
+/* Common item styles */
 .exif-icon {
   font-size: 0.9rem;
-  opacity: 0.95;
+  opacity: 0.9;
+  flex-shrink: 0;
 }
 
 .exif-text {
@@ -81,10 +186,6 @@
   margin: 0 6px;
 }
 
-.camera-info .exif-text {
-  display: inline;
-}
-
 .camera-info .exif-text div {
   display: inline;
   font-size: 0.9rem;
@@ -105,62 +206,46 @@
   margin: 0 6px;
 }
 
-/* Position variants - for settings compatibility */
+/* Position variants (for top positions) */
 .exif-overlay.top-left {
-  top: 0;
+  top: 20px;
   bottom: auto;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.6) 0%,
-    rgba(0, 0, 0, 0.4) 50%,
-    transparent 100%
-  );
 }
 
 .exif-overlay.top-right {
-  top: 0;
+  top: 20px;
   bottom: auto;
-  text-align: right;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.6) 0%,
-    rgba(0, 0, 0, 0.4) 50%,
-    transparent 100%
-  );
-}
-
-.exif-overlay.top-right .exif-content {
-  justify-content: flex-end;
+  left: auto;
+  right: 20px;
 }
 
 .exif-overlay.bottom-right {
-  text-align: right;
-}
-
-.exif-overlay.bottom-right .exif-content {
-  justify-content: flex-end;
+  left: auto;
+  right: 20px;
 }
 
 .exif-overlay.bottom-center {
-  text-align: center;
-}
-
-.exif-overlay.bottom-center .exif-content {
-  justify-content: center;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .exif-overlay.bottom-center.hidden {
-  transform: translateY(10px);
+  transform: translateX(-50%) translateY(10px);
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .exif-overlay {
+    max-width: 95%;
+  }
+
+  .exif-overlay.style-modern-blur,
+  .exif-overlay.style-minimal {
     padding: 15px 20px;
   }
 
   .exif-content {
-    gap: 12px;
+    gap: 12px !important;
   }
 
   .exif-text {
@@ -170,7 +255,8 @@
 
 /* TV optimizations for large screens */
 @media (min-width: 1920px) {
-  .exif-overlay {
+  .exif-overlay.style-modern-blur,
+  .exif-overlay.style-film-strip {
     padding: 30px 60px;
   }
 
@@ -209,12 +295,8 @@
 
 /* Fallback for browsers without backdrop-filter support */
 @supports not (backdrop-filter: blur(8px)) {
-  .exif-overlay {
-    background: linear-gradient(
-      to top,
-      rgba(0, 0, 0, 0.75) 0%,
-      rgba(0, 0, 0, 0.5) 50%,
-      transparent 100%
-    );
+  .exif-overlay.style-modern-blur,
+  .exif-overlay.style-corner-tag {
+    background: rgba(0, 0, 0, 0.85);
   }
 }
