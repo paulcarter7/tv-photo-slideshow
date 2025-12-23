@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ExifOverlay from './ExifOverlay';
 import { fetchPhotos } from '../services/photoService';
+import { fetchPhotos as fetchMockPhotos } from '../services/photoService.mock';
 import { extractExifData } from '../utils/exifUtils';
 import './Slideshow.css';
 
@@ -15,26 +16,29 @@ function Slideshow({ config }) {
   const [isPaused, setIsPaused] = useState(false);
   const [preloadedImages, setPreloadedImages] = useState({});
 
-  // Fetch photos from S3
+  // Fetch photos from S3 or use mock photos for testing
   useEffect(() => {
     const loadPhotos = async () => {
-      if (!config.s3Bucket) {
-        setError('No S3 bucket configured. Press MENU to configure settings.');
-        setIsLoading(false);
-        return;
-      }
-
       try {
         setIsLoading(true);
         setError(null);
-        const photoList = await fetchPhotos(
-          config.s3Bucket,
-          config.s3Region,
-          config.s3Prefix
-        );
+
+        let photoList;
+
+        // Use mock photos if no S3 bucket configured (for local testing)
+        if (!config.s3Bucket) {
+          console.log('No S3 bucket configured, using mock photos for testing...');
+          photoList = await fetchMockPhotos();
+        } else {
+          photoList = await fetchPhotos(
+            config.s3Bucket,
+            config.s3Region,
+            config.s3Prefix
+          );
+        }
 
         if (photoList.length === 0) {
-          setError('No photos found in the configured S3 bucket.');
+          setError('No photos found. Press MENU to configure S3 or add mock photos.');
           setIsLoading(false);
           return;
         }
