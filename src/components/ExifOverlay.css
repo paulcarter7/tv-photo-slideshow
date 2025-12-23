@@ -1,14 +1,12 @@
-/* Film Strip Style - Horizontal bar at bottom */
+/* Ultra Minimal Style - Clean text only, no background */
 .exif-overlay {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 12px 40px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+  bottom: 30px;
+  left: 40px;
+  right: 40px;
   z-index: 30;
   transition: opacity 0.5s ease, transform 0.5s ease;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: none;
 }
 
 .exif-overlay.visible {
@@ -23,52 +21,50 @@
 
 .exif-content {
   display: flex;
-  align-items: center;
-  gap: 30px;
+  align-items: baseline;
+  gap: 20px;
   flex-wrap: wrap;
-  max-width: 1400px;
-  margin: 0 auto;
 }
 
 .exif-item {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-primary);
+  align-items: baseline;
+  gap: 6px;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8),
+               0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .exif-icon {
-  font-size: 1rem;
-  opacity: 0.7;
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
 .exif-text {
   font-size: 0.95rem;
   line-height: 1.4;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  font-weight: 400;
+  display: inline;
 }
 
 .location-name {
-  font-weight: 400;
+  font-weight: 500;
   font-size: 0.95rem;
 }
 
 .location-coords {
   font-size: 0.85rem;
-  color: var(--text-secondary);
-  opacity: 0.8;
+  opacity: 0.85;
+  margin-left: 4px;
 }
 
 .location-coords::before {
-  content: "•";
+  content: "·";
   margin: 0 6px;
-  opacity: 0.5;
 }
 
 .camera-info .exif-text {
-  gap: 6px;
+  display: inline;
 }
 
 .camera-info .exif-text div {
@@ -81,24 +77,69 @@
 }
 
 .camera-info .exif-text div:last-child {
-  color: var(--text-secondary);
-  opacity: 0.8;
+  opacity: 0.85;
+  margin-left: 4px;
 }
 
 .camera-info .exif-text div:last-child::before {
-  content: "•";
+  content: "·";
   margin: 0 6px;
-  opacity: 0.5;
+}
+
+/* Position variants - for settings compatibility */
+.exif-overlay.top-left {
+  top: 30px;
+  bottom: auto;
+  left: 40px;
+}
+
+.exif-overlay.top-right {
+  top: 30px;
+  bottom: auto;
+  left: auto;
+  right: 40px;
+  text-align: right;
+}
+
+.exif-overlay.top-right .exif-content {
+  justify-content: flex-end;
+}
+
+.exif-overlay.bottom-right {
+  left: auto;
+  right: 40px;
+  text-align: right;
+}
+
+.exif-overlay.bottom-right .exif-content {
+  justify-content: flex-end;
+}
+
+.exif-overlay.bottom-center {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.exif-overlay.bottom-center .exif-content {
+  justify-content: center;
+}
+
+.exif-overlay.bottom-center.hidden {
+  transform: translateX(-50%) translateY(10px);
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .exif-overlay {
-    padding: 10px 20px;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
   }
 
   .exif-content {
-    gap: 15px;
+    gap: 12px;
   }
 
   .exif-text {
@@ -109,27 +150,33 @@
 /* TV optimizations for large screens */
 @media (min-width: 1920px) {
   .exif-overlay {
-    padding: 16px 60px;
+    bottom: 50px;
+    left: 60px;
+    right: 60px;
   }
 
   .exif-icon {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 
   .exif-text {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
   }
 
   .location-name {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+  }
+
+  .location-coords {
+    font-size: 1rem;
   }
 }
 
 /* Smooth entrance animation */
-@keyframes slideInFromBottom {
+@keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -138,5 +185,5 @@
 }
 
 .exif-overlay.visible {
-  animation: slideInFromBottom 0.5s ease-out;
+  animation: fadeInUp 0.6s ease-out;
 }
