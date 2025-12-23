@@ -1,0 +1,48 @@
+.app {
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-loading {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: #000;
+}
+
+.app-loading p {
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.app-hint {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background: var(--overlay-bg);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 100;
+}
+
+.app-hint:hover {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .app-hint {
+    display: none;
+  }
+}

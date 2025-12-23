@@ -1,0 +1,160 @@
+.exif-overlay {
+  position: absolute;
+  padding: 20px 30px;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  z-index: 30;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  max-width: 90%;
+}
+
+.exif-overlay.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.exif-overlay.hidden {
+  opacity: 0;
+}
+
+/* Position variants */
+.exif-overlay.bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.exif-overlay.bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+.exif-overlay.top-left {
+  top: 20px;
+  left: 20px;
+}
+
+.exif-overlay.top-right {
+  top: 20px;
+  right: 20px;
+}
+
+.exif-overlay.bottom-center {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.exif-overlay.bottom-center.hidden {
+  transform: translateX(-50%) translateY(20px);
+}
+
+.exif-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.exif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: var(--text-primary);
+}
+
+.exif-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.exif-text {
+  font-size: 1rem;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.location-name {
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.location-coords {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.camera-info .exif-text {
+  gap: 6px;
+}
+
+.camera-info .exif-text div:first-child {
+  font-weight: 500;
+}
+
+.camera-info .exif-text div:last-child {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .exif-overlay {
+    padding: 15px 20px;
+    font-size: 0.9rem;
+  }
+
+  .exif-icon {
+    font-size: 1rem;
+  }
+
+  .exif-text {
+    font-size: 0.9rem;
+  }
+
+  .location-name {
+    font-size: 1rem;
+  }
+}
+
+/* TV optimizations for large screens */
+@media (min-width: 1920px) {
+  .exif-overlay {
+    padding: 30px 40px;
+    border-radius: 16px;
+  }
+
+  .exif-icon {
+    font-size: 1.5rem;
+  }
+
+  .exif-text {
+    font-size: 1.2rem;
+  }
+
+  .location-name {
+    font-size: 1.3rem;
+  }
+
+  .location-coords {
+    font-size: 1.1rem;
+  }
+}
+
+/* Smooth entrance animation */
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.exif-overlay.visible {
+  animation: slideInFromBottom 0.5s ease-out;
+}
