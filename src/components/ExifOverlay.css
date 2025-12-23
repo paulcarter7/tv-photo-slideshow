@@ -1,12 +1,14 @@
+/* Film Strip Style - Horizontal bar at bottom */
 .exif-overlay {
   position: absolute;
-  padding: 20px 30px;
-  background: var(--overlay-bg);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 40px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
   z-index: 30;
   transition: opacity 0.5s ease, transform 0.5s ease;
-  max-width: 90%;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .exif-overlay.visible {
@@ -16,129 +18,109 @@
 
 .exif-overlay.hidden {
   opacity: 0;
-}
-
-/* Position variants */
-.exif-overlay.bottom-left {
-  bottom: 20px;
-  left: 20px;
-}
-
-.exif-overlay.bottom-right {
-  bottom: 20px;
-  right: 20px;
-}
-
-.exif-overlay.top-left {
-  top: 20px;
-  left: 20px;
-}
-
-.exif-overlay.top-right {
-  top: 20px;
-  right: 20px;
-}
-
-.exif-overlay.bottom-center {
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.exif-overlay.bottom-center.hidden {
-  transform: translateX(-50%) translateY(20px);
+  transform: translateY(10px);
 }
 
 .exif-content {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .exif-item {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
   color: var(--text-primary);
 }
 
 .exif-icon {
-  font-size: 1.2rem;
-  flex-shrink: 0;
-  opacity: 0.9;
+  font-size: 1rem;
+  opacity: 0.7;
 }
 
 .exif-text {
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.4;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 6px;
 }
 
 .location-name {
-  font-weight: 500;
-  font-size: 1.1rem;
+  font-weight: 400;
+  font-size: 0.95rem;
 }
 
 .location-coords {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.location-coords::before {
+  content: "•";
+  margin: 0 6px;
+  opacity: 0.5;
 }
 
 .camera-info .exif-text {
   gap: 6px;
 }
 
+.camera-info .exif-text div {
+  display: inline;
+  font-size: 0.9rem;
+}
+
 .camera-info .exif-text div:first-child {
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .camera-info .exif-text div:last-child {
-  font-size: 0.9rem;
   color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.camera-info .exif-text div:last-child::before {
+  content: "•";
+  margin: 0 6px;
+  opacity: 0.5;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .exif-overlay {
-    padding: 15px 20px;
-    font-size: 0.9rem;
+    padding: 10px 20px;
   }
 
-  .exif-icon {
-    font-size: 1rem;
+  .exif-content {
+    gap: 15px;
   }
 
   .exif-text {
-    font-size: 0.9rem;
-  }
-
-  .location-name {
-    font-size: 1rem;
+    font-size: 0.85rem;
   }
 }
 
 /* TV optimizations for large screens */
 @media (min-width: 1920px) {
   .exif-overlay {
-    padding: 30px 40px;
-    border-radius: 16px;
+    padding: 16px 60px;
   }
 
   .exif-icon {
-    font-size: 1.5rem;
-  }
-
-  .exif-text {
     font-size: 1.2rem;
   }
 
-  .location-name {
-    font-size: 1.3rem;
+  .exif-text {
+    font-size: 1.1rem;
   }
 
-  .location-coords {
+  .location-name {
     font-size: 1.1rem;
   }
 }
