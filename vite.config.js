@@ -18,5 +18,15 @@ export default defineConfig({
         }
       }
     }
+  },
+  define: {
+    // Fix for aws-sdk in browser
+    'global': 'globalThis',
+    'process.env': {}
+  },
+  resolve: {
+    alias: {
+      './runtimeConfig': './runtimeConfig.browser',
+    }
   }
 });
