@@ -5,7 +5,7 @@ import { fetchPhotos as fetchMockPhotos } from '../services/photoService.mock';
 import { extractExifData } from '../utils/exifUtils';
 import './Slideshow.css';
 
-function Slideshow({ config }) {
+function Slideshow({ config, onOpenSettings }) {
   const [photos, setPhotos] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [nextIndex, setNextIndex] = useState(1);
@@ -236,6 +236,12 @@ function Slideshow({ config }) {
       <div className="slideshow-counter">
         {currentIndex + 1} / {photos.length}
       </div>
+
+      {onOpenSettings && (
+        <button className="settings-button" onClick={onOpenSettings} aria-label="Open Settings">
+          <span className="settings-icon">⚙️</span>
+        </button>
+      )}
     </div>
   );
 }

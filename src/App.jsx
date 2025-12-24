@@ -85,7 +85,10 @@ function App() {
   return (
     <div className="app">
       {view === 'slideshow' ? (
-        <Slideshow config={config} />
+        <Slideshow
+          config={config}
+          onOpenSettings={() => setView('settings')}
+        />
       ) : (
         <Settings
           config={config}
@@ -93,9 +96,6 @@ function App() {
           onCancel={handleCancelSettings}
         />
       )}
-      <div className="app-hint">
-        Press MENU/SETTINGS to configure
-      </div>
     </div>
   );
 }

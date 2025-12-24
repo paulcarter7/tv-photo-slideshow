@@ -181,6 +181,41 @@
   z-index: 40;
 }
 
+/* Settings button */
+.settings-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 10px 20px;
+  background: var(--overlay-bg);
+  border: none;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  z-index: 40;
+  transition: background 0.3s ease, transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-button:hover,
+.settings-button:focus {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+  outline: none;
+}
+
+.settings-button:active {
+  transform: scale(0.95);
+}
+
+.settings-icon {
+  display: block;
+  line-height: 1;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .slideshow-controls {
@@ -189,6 +224,11 @@
 
   .slideshow-counter {
     font-size: 0.8rem;
+    padding: 8px 15px;
+  }
+
+  .settings-button {
+    font-size: 1.2rem;
     padding: 8px 15px;
   }
 }
@@ -210,5 +250,10 @@
 
   .slideshow-counter {
     font-size: 1.2rem;
+  }
+
+  .settings-button {
+    font-size: 1.8rem;
+    padding: 12px 24px;
   }
 }
