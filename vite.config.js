@@ -9,7 +9,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: false,
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -17,16 +17,6 @@ export default defineConfig({
           exif: ['exifr']
         }
       }
-    }
-  },
-  define: {
-    // Fix for aws-sdk in browser
-    'global': 'globalThis',
-    'process.env': {}
-  },
-  resolve: {
-    alias: {
-      './runtimeConfig': './runtimeConfig.browser',
     }
   }
 });
