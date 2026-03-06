@@ -84,7 +84,7 @@ function ExifOverlay({ exifData, config }) {
     : null;
 
   // Don't render if no data to show
-  if (!dateTime && !location && !locationName && !cameraInfo) {
+  if (!dateTime && !locationName && !cameraInfo) {
     return null;
   }
 
@@ -100,12 +100,11 @@ function ExifOverlay({ exifData, config }) {
           </div>
         )}
 
-        {(location || locationName) && (
+        {locationName && (
           <div className="exif-item">
             <span className="exif-icon">📍</span>
             <span className="exif-text">
-              {locationName && <div className="location-name">{locationName}</div>}
-              {location && <div className="location-coords">{location}</div>}
+              <div className="location-name">{locationName}</div>
             </span>
           </div>
         )}

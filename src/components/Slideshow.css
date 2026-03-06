@@ -27,42 +27,44 @@
 /* Fade transition */
 .fade .slide.current {
   opacity: 1;
-  transition: opacity 1s ease-in-out;
   z-index: 1;
 }
 
 .fade .slide.current.transitioning-out {
   opacity: 0;
+  transition: opacity 1s ease-in-out;
 }
 
 .fade .slide.next {
   opacity: 0;
-  z-index: 2;
+  z-index: 0;
 }
 
 .fade .slide.next.transitioning-in {
   opacity: 1;
+  z-index: 2;
   transition: opacity 1s ease-in-out;
 }
 
 /* Slide transition */
 .slide-transition .slide.current {
   transform: translateX(0);
-  transition: transform 1s ease-in-out;
   z-index: 1;
 }
 
 .slide-transition .slide.current.transitioning-out {
   transform: translateX(-100%);
+  transition: transform 1s ease-in-out;
 }
 
 .slide-transition .slide.next {
   transform: translateX(100%);
-  z-index: 2;
+  z-index: 0;
 }
 
 .slide-transition .slide.next.transitioning-in {
   transform: translateX(0);
+  z-index: 2;
   transition: transform 1s ease-in-out;
 }
 
@@ -70,24 +72,25 @@
 .zoom .slide.current {
   transform: scale(1);
   opacity: 1;
-  transition: transform 1s ease-in-out, opacity 1s ease-in-out;
   z-index: 1;
 }
 
 .zoom .slide.current.transitioning-out {
   transform: scale(1.2);
   opacity: 0;
+  transition: transform 1s ease-in-out, opacity 1s ease-in-out;
 }
 
 .zoom .slide.next {
   transform: scale(0.8);
   opacity: 0;
-  z-index: 2;
+  z-index: 0;
 }
 
 .zoom .slide.next.transitioning-in {
   transform: scale(1);
   opacity: 1;
+  z-index: 2;
   transition: transform 1s ease-in-out, opacity 1s ease-in-out;
 }
 

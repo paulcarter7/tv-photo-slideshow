@@ -6,9 +6,9 @@ import { loadConfig, saveConfig } from './services/configService';
 import './App.css';
 
 const DEFAULT_CONFIG = {
-  s3Bucket: '',
-  s3Region: 'us-east-1',
-  s3Prefix: '',
+  s3Bucket: import.meta.env.VITE_S3_PHOTOS_BUCKET || '',
+  s3Region: import.meta.env.VITE_AWS_REGION || 'us-east-1',
+  s3Prefix: 'photos/',
   displayDuration: 10,
   transitionEffect: 'fade',
   shuffleMode: false,

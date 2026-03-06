@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ExifOverlay from './ExifOverlay';
 import { fetchPhotos } from '../services/photoService';
 import { fetchPhotos as fetchMockPhotos } from '../services/photoService.mock';
@@ -14,7 +14,7 @@ function Slideshow({ config, onOpenSettings }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [preloadedImages, setPreloadedImages] = useState({});
+  const preloadedImages = useRef({});
 
   // Fetch photos from S3 or use mock photos for testing
   useEffect(() => {
@@ -65,17 +65,13 @@ function Slideshow({ config, onOpenSettings }) {
     if (photos.length === 0) return;
 
     const preloadImage = (url, index) => {
-      if (preloadedImages[index]) return Promise.resolve();
+      if (preloadedImages.current[index]) return;
 
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-          setPreloadedImages(prev => ({ ...prev, [index]: url }));
-          resolve();
-        };
-        img.onerror = reject;
-        img.src = url;
-      });
+      const img = new Image();
+      img.onload = () => {
+        preloadedImages.current[index] = url;
+      };
+      img.src = url;
     };
 
     // Preload current and next images
@@ -83,15 +79,25 @@ function Slideshow({ config, onOpenSettings }) {
     if (photos[nextIndex]) {
       preloadImage(photos[nextIndex], nextIndex);
     }
-  }, [photos, currentIndex, nextIndex, preloadedImages]);
+  }, [photos, currentIndex, nextIndex]);
 
-  // Extract EXIF data for current photo
+  // EXIF data cache
+  const exifCache = useRef({});
+
+  // Extract EXIF data for current photo (use cache if available)
   useEffect(() => {
     if (photos.length === 0 || !config.exifDisplay.enabled) return;
 
+    const url = photos[currentIndex];
+    if (exifCache.current[url]) {
+      setExifData(exifCache.current[url]);
+      return;
+    }
+
     const loadExifData = async () => {
       try {
-        const data = await extractExifData(photos[currentIndex]);
+        const data = await extractExifData(url);
+        exifCache.current[url] = data;
         setExifData(data);
       } catch (err) {
         console.error('Error extracting EXIF data:', err);
@@ -101,6 +107,18 @@ function Slideshow({ config, onOpenSettings }) {
 
     loadExifData();
   }, [photos, currentIndex, config.exifDisplay.enabled]);
+
+  // Pre-fetch EXIF data for next photo
+  useEffect(() => {
+    if (photos.length === 0 || !config.exifDisplay.enabled) return;
+
+    const nextUrl = photos[nextIndex];
+    if (!nextUrl || exifCache.current[nextUrl]) return;
+
+    extractExifData(nextUrl).then(data => {
+      exifCache.current[nextUrl] = data;
+    }).catch(() => {});
+  }, [photos, nextIndex, config.exifDisplay.enabled]);
 
   // Auto-advance slideshow
   useEffect(() => {
@@ -125,6 +143,11 @@ function Slideshow({ config, onOpenSettings }) {
       setCurrentIndex(next);
       setNextIndex((next + 1) % photos.length);
       setIsTransitioning(false);
+      // Set EXIF from cache in same batch so tag appears with the photo
+      const nextUrl = photos[next];
+      if (nextUrl && exifCache.current[nextUrl]) {
+        setExifData(exifCache.current[nextUrl]);
+      }
     }, 1000); // Match transition duration in CSS
   }, [photos.length, currentIndex]);
 
@@ -139,6 +162,10 @@ function Slideshow({ config, onOpenSettings }) {
       setCurrentIndex(prev);
       setNextIndex((prev + 1) % photos.length);
       setIsTransitioning(false);
+      const prevUrl = photos[prev];
+      if (prevUrl && exifCache.current[prevUrl]) {
+        setExifData(exifCache.current[prevUrl]);
+      }
     }, 1000);
   }, [photos.length, currentIndex, isTransitioning]);
 
@@ -205,12 +232,10 @@ function Slideshow({ config, onOpenSettings }) {
           className={`slide current ${isTransitioning ? 'transitioning-out' : ''}`}
           style={{ backgroundImage: `url(${photos[currentIndex]})` }}
         />
-        {isTransitioning && (
-          <div
-            className="slide next transitioning-in"
-            style={{ backgroundImage: `url(${photos[nextIndex]})` }}
-          />
-        )}
+        <div
+          className={`slide next ${isTransitioning ? 'transitioning-in' : ''}`}
+          style={{ backgroundImage: photos[nextIndex] ? `url(${photos[nextIndex]})` : 'none' }}
+        />
       </div>
 
       {config.exifDisplay.enabled && exifData && (

@@ -1,4 +1,58 @@
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { fromCognitoIdentityPool } from '@aws-sdk/credential-providers';
 import exifr from 'exifr';
+
+// Cached S3 client for authenticated EXIF fetching
+let cachedS3Client = null;
+
+function getS3Client() {
+  if (!cachedS3Client) {
+    const region = import.meta.env.VITE_AWS_REGION || 'us-west-1';
+    const identityPoolId = import.meta.env.VITE_AWS_IDENTITY_POOL_ID;
+    if (!identityPoolId) return null;
+
+    cachedS3Client = new S3Client({
+      region,
+      credentials: fromCognitoIdentityPool({
+        identityPoolId,
+        clientConfig: { region }
+      })
+    });
+  }
+  return cachedS3Client;
+}
+
+/**
+ * Parse an S3 URL to extract bucket, region, and key
+ */
+function parseS3Url(url) {
+  const match = url.match(/^https:\/\/(.+?)\.s3\.(.+?)\.amazonaws\.com\/(.+)$/);
+  if (match) {
+    return { bucket: match[1], region: match[2], key: decodeURIComponent(match[3]) };
+  }
+  return null;
+}
+
+/**
+ * Fetch image data from S3 using Cognito credentials, or fall back to fetch
+ */
+async function fetchImageData(imageUrl) {
+  const s3Info = parseS3Url(imageUrl);
+  const s3Client = getS3Client();
+
+  if (s3Info && s3Client) {
+    const command = new GetObjectCommand({
+      Bucket: s3Info.bucket,
+      Key: s3Info.key,
+    });
+    const response = await s3Client.send(command);
+    return new Response(response.Body).arrayBuffer();
+  }
+
+  // Fallback for non-S3 URLs
+  const response = await fetch(imageUrl);
+  return response.arrayBuffer();
+}
 
 /**
  * Extract EXIF data from an image URL
@@ -7,12 +61,10 @@ import exifr from 'exifr';
  */
 export async function extractExifData(imageUrl) {
   try {
-    // Fetch the image
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
+    const buffer = await fetchImageData(imageUrl);
 
     // Parse EXIF data using exifr
-    const exif = await exifr.parse(blob, {
+    const exif = await exifr.parse(buffer, {
       // Specify which tags to extract for better performance
       pick: [
         // DateTime tags

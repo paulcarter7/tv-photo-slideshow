@@ -1,10 +1,11 @@
 import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import { fromCognitoIdentityPool } from '@aws-sdk/credential-providers';
 
 // Supported image formats
 const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif'];
 
 /**
- * Fetch list of photos from public S3 bucket
+ * Fetch list of photos from S3 bucket using Cognito Identity Pool credentials
  * Dynamically lists all image files in the bucket
  * @param {string} bucket - S3 bucket name
  * @param {string} region - AWS region
@@ -13,13 +14,15 @@ const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.h
  */
 export async function fetchPhotos(bucket, region = 'us-west-1', prefix = 'photos/') {
   try {
-    // Create S3 client without credentials (for public bucket)
+    const identityPoolId = import.meta.env.VITE_AWS_IDENTITY_POOL_ID;
+
+    // Create S3 client with Cognito Identity Pool credentials
     const s3Client = new S3Client({
       region: region,
-      credentials: {
-        accessKeyId: 'none',
-        secretAccessKey: 'none'
-      }
+      credentials: fromCognitoIdentityPool({
+        identityPoolId,
+        clientConfig: { region }
+      })
     });
 
     const command = new ListObjectsV2Command({
