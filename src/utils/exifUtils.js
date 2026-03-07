@@ -157,49 +157,175 @@ function formatExposureTime(exposureTime) {
   return `1/${denominator}`;
 }
 
+// Persistent location cache (survives page reloads)
+const LOCATION_CACHE_KEY = 'tv-slideshow-location-cache';
+
+function getLocationCache() {
+  try {
+    return JSON.parse(localStorage.getItem(LOCATION_CACHE_KEY) || '{}');
+  } catch { return {}; }
+}
+
+function setLocationCache(key, value) {
+  try {
+    const cache = getLocationCache();
+    cache[key] = value;
+    localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(cache));
+  } catch { /* storage full or unavailable */ }
+}
+
+// Venue types filtered out (low-value POIs)
+const FILTERED_VENUE_TYPES = new Set([
+  'parking', 'fuel', 'atm', 'bank', 'toilets'
+]);
+
+// Venue type priority tiers (lower = higher priority)
+const VENUE_PRIORITY = new Map([
+  // Tier 1 - Entertainment & dining
+  ['restaurant', 1], ['bar', 1], ['cafe', 1], ['pub', 1], ['nightclub', 1],
+  ['theme_park', 1], ['golf_course', 1], ['stadium', 1], ['museum', 1],
+  ['zoo', 1], ['aquarium', 1], ['attraction', 1],
+  // Tier 2 - Notable venues
+  ['theatre', 2], ['cinema', 2], ['casino', 2], ['hotel', 2],
+  ['library', 2], ['place_of_worship', 2],
+  // Tier 3 - Shopping
+  ['mall', 3], ['supermarket', 3], ['department_store', 3],
+]);
+
 /**
- * Convert GPS coordinates to location name using reverse geocoding
- * Note: This requires a geocoding service. Using OpenStreetMap Nominatim as example.
- * For production, consider using a paid service with better rate limits.
- * @param {number} latitude - Latitude
- * @param {number} longitude - Longitude
- * @returns {Promise<string>} Location name
+ * Select the best venue from Overpass results by priority then distance
+ */
+function selectBestVenue(elements, lat, lon) {
+  const candidates = elements
+    .filter(el => el.tags?.name && !FILTERED_VENUE_TYPES.has(el.tags.amenity))
+    .map(el => {
+      const elLat = el.lat ?? el.center?.lat;
+      const elLon = el.lon ?? el.center?.lon;
+      const type = el.tags.amenity || el.tags.leisure || el.tags.tourism || el.tags.shop;
+      const priority = VENUE_PRIORITY.get(type) ?? 4;
+      const dist = (elLat != null && elLon != null)
+        ? calculateDistance(lat, lon, elLat, elLon)
+        : Infinity;
+      return { name: el.tags.name, priority, dist };
+    });
+
+  if (candidates.length === 0) return null;
+
+  candidates.sort((a, b) => a.priority - b.priority || a.dist - b.dist);
+  return candidates[0].name;
+}
+
+/**
+ * Query Overpass API for nearby named venues
+ */
+async function getVenueName(latitude, longitude) {
+  const radius = 150; // meters
+  const query = `[out:json][timeout:5];(
+    node["amenity"]["name"](around:${radius},${latitude},${longitude});
+    way["amenity"]["name"](around:${radius},${latitude},${longitude});
+    node["leisure"]["name"](around:${radius},${latitude},${longitude});
+    way["leisure"]["name"](around:${radius},${latitude},${longitude});
+    node["tourism"]["name"](around:${radius},${latitude},${longitude});
+    way["tourism"]["name"](around:${radius},${latitude},${longitude});
+    node["shop"]["name"](around:${radius},${latitude},${longitude});
+    way["shop"]["name"](around:${radius},${latitude},${longitude});
+  );out center;`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+  try {
+    const response = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: `data=${encodeURIComponent(query)}`,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    return selectBestVenue(data.elements || [], latitude, longitude);
+  } catch (error) {
+    clearTimeout(timeoutId);
+    console.warn('Overpass API query failed:', error.message);
+    return null;
+  }
+}
+
+/**
+ * Reverse geocode coordinates to "City, State" (or "City, State, Country" for non-US)
+ */
+async function getNominatimLocationName(latitude, longitude) {
+  const response = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+    {
+      headers: {
+        'User-Agent': 'TV-Photo-Slideshow-App'
+      }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Geocoding request failed');
+  }
+
+  const data = await response.json();
+  const address = data.address || {};
+
+  // Extract venue name from Nominatim (used as fallback if Overpass misses)
+  const venueName = data.name && data.name !== address.city
+    && data.name !== address.town && data.name !== address.state
+    ? data.name : null;
+
+  const cityParts = [];
+
+  if (address.city) cityParts.push(address.city);
+  else if (address.town) cityParts.push(address.town);
+  else if (address.village) cityParts.push(address.village);
+  else if (address.county) cityParts.push(address.county);
+
+  if (address.state) cityParts.push(address.state);
+
+  // Drop "United States" to keep strings concise
+  if (address.country && address.country_code !== 'us') {
+    cityParts.push(address.country);
+  }
+
+  const location = cityParts.length > 0 ? cityParts.join(', ') : null;
+
+  return { location, venueName };
+}
+
+/**
+ * Get location name with optional venue — runs Nominatim + Overpass in parallel
  */
 async function getLocationName(latitude, longitude) {
+  // Round to ~11m precision for cache key (4 decimal places)
+  const cacheKey = `${latitude.toFixed(4)},${longitude.toFixed(4)}`;
+  const cached = getLocationCache()[cacheKey];
+  if (cached) return cached;
+
   try {
-    // Use OpenStreetMap Nominatim for reverse geocoding (free, but rate-limited)
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
-      {
-        headers: {
-          'User-Agent': 'TV-Photo-Slideshow-App'
-        }
-      }
-    );
+    const [nominatimResult, venueResult] = await Promise.allSettled([
+      getNominatimLocationName(latitude, longitude),
+      getVenueName(latitude, longitude),
+    ]);
 
-    if (!response.ok) {
-      throw new Error('Geocoding request failed');
-    }
+    const nominatim = nominatimResult.status === 'fulfilled' ? nominatimResult.value : {};
+    const overpassVenue = venueResult.status === 'fulfilled' ? venueResult.value : null;
 
-    const data = await response.json();
+    // Prefer Overpass venue, fall back to Nominatim venue name
+    const venue = overpassVenue || nominatim.venueName || null;
+    const location = nominatim.location || null;
 
-    // Extract meaningful location name
-    const address = data.address || {};
-    const parts = [];
+    let result;
+    if (venue && location) result = `${venue}, ${location}`;
+    else if (venue) result = venue;
+    else result = location;
 
-    // Prefer city/town/village
-    if (address.city) parts.push(address.city);
-    else if (address.town) parts.push(address.town);
-    else if (address.village) parts.push(address.village);
-    else if (address.county) parts.push(address.county);
-
-    // Add state/region if available
-    if (address.state) parts.push(address.state);
-
-    // Add country
-    if (address.country) parts.push(address.country);
-
-    return parts.length > 0 ? parts.join(', ') : null;
+    if (result) setLocationCache(cacheKey, result);
+    return result;
   } catch (error) {
     console.error('Error getting location name:', error);
     return null;

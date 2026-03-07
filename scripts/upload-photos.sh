@@ -40,7 +40,7 @@ if [ -z "$1" ]; then
 fi
 
 PHOTOS_DIR=$1
-PREFIX=${2:-""}
+PREFIX=${2:-"photos/"}
 
 # Check if directory exists
 if [ ! -d "$PHOTOS_DIR" ]; then
@@ -60,6 +60,36 @@ echo -e "${YELLOW}📸 Found $PHOTO_COUNT photos in $PHOTOS_DIR${NC}"
 echo -e "${YELLOW}☁️  Uploading to s3://$VITE_S3_PHOTOS_BUCKET/$PREFIX${NC}"
 echo ""
 
+# Convert HEIC files to JPEG
+HEIC_COUNT=$(find "$PHOTOS_DIR" -type f -iname "*.heic" | wc -l | tr -d ' ')
+UPLOAD_DIR="$PHOTOS_DIR"
+
+if [ "$HEIC_COUNT" -gt 0 ]; then
+    echo -e "${YELLOW}🔄 Found $HEIC_COUNT HEIC files — converting to JPEG...${NC}"
+
+    if ! command -v sips &> /dev/null; then
+        echo -e "${RED}❌ sips not found (requires macOS). HEIC files will be skipped.${NC}"
+    else
+        UPLOAD_DIR=$(mktemp -d)
+        trap "rm -rf '$UPLOAD_DIR'" EXIT
+
+        # Copy non-HEIC files
+        find "$PHOTOS_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" -o -iname "*.webp" \) -exec cp {} "$UPLOAD_DIR/" \;
+
+        # Convert HEIC to JPEG
+        find "$PHOTOS_DIR" -type f -iname "*.heic" | while read -r heic_file; do
+            basename="${heic_file##*/}"
+            jpg_name="${basename%.*}.jpg"
+            sips -s format jpeg -s formatOptions 90 "$heic_file" --out "$UPLOAD_DIR/$jpg_name" > /dev/null 2>&1
+            echo "  Converted: $basename → $jpg_name"
+        done
+
+        # Recount
+        PHOTO_COUNT=$(find "$UPLOAD_DIR" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" -o -iname "*.webp" \) | wc -l | tr -d ' ')
+        echo -e "${GREEN}✅ Converted $HEIC_COUNT HEIC files. $PHOTO_COUNT photos ready to upload.${NC}"
+    fi
+fi
+
 # Confirm upload
 read -p "Continue with upload? (y/n) " -n 1 -r
 echo
@@ -70,14 +100,13 @@ fi
 
 # Upload photos
 echo -e "\n${YELLOW}⬆️  Uploading photos...${NC}"
-aws s3 sync "$PHOTOS_DIR" "s3://$VITE_S3_PHOTOS_BUCKET/$PREFIX" \
+aws s3 sync "$UPLOAD_DIR" "s3://$VITE_S3_PHOTOS_BUCKET/$PREFIX" \
     --exclude "*" \
     --include "*.jpg" --include "*.JPG" \
     --include "*.jpeg" --include "*.JPEG" \
     --include "*.png" --include "*.PNG" \
     --include "*.gif" --include "*.GIF" \
     --include "*.webp" --include "*.WEBP" \
-    --include "*.heic" --include "*.HEIC" \
     --metadata-directive COPY
 
 echo -e "\n${GREEN}✅ Upload completed successfully!${NC}"

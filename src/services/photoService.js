@@ -2,7 +2,7 @@ import { S3Client, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { fromCognitoIdentityPool } from '@aws-sdk/credential-providers';
 
 // Supported image formats
-const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.heic', '.heif'];
+const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 
 /**
  * Fetch list of photos from S3 bucket using Cognito Identity Pool credentials
