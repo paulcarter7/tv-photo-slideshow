@@ -1,56 +1,26 @@
 # TV Photo Slideshow
 
-A beautiful, feature-rich photo slideshow application designed for modern Smart TVs (LG webOS and Samsung Tizen), with EXIF metadata display, multiple transition effects, and AWS cloud integration.
+A fullscreen photo slideshow app designed for smart TV browsers (LG webOS, Samsung Tizen, or any TV with a modern browser). Photos are stored in AWS S3 and served via CloudFront. EXIF metadata — date, GPS location with reverse geocoding, camera info — is displayed as an overlay.
 
 ## Features
 
-### 🎨 Core Features
-- **Multiple Transition Effects**: Fade, slide, and zoom transitions
-- **EXIF Metadata Display**: Automatically shows date/time, GPS location, and camera information
-- **TV Remote Control Support**: Full navigation using your TV remote
-- **Configurable Settings**: Adjust display duration, transitions, and EXIF display options
-- **AWS S3 Integration**: Store and serve photos from Amazon S3
-- **Shuffle Mode**: Randomize photo order
-- **Responsive Design**: Optimized for 4K TVs and various screen sizes
+- **Multiple transitions**: Fade, slide, and zoom
+- **EXIF overlay**: Date/time, location (city/venue via reverse geocoding), camera info
+- **TV remote navigation**: Arrow keys, Enter/OK, Menu, Back
+- **Shuffle mode**
+- **Settings UI**: Accessible via the MENU key on your remote, persisted per device
+- **AWS S3 + CloudFront**: Photos served globally with low latency
 
-### 📸 EXIF Data Support
-- Date and time photo was taken
-- GPS location with reverse geocoding (shows city/country)
-- Camera make and model
-- Exposure settings (aperture, shutter speed, ISO, focal length)
-- Configurable display position and auto-hide
+## Requirements
 
-### 🎮 TV Remote Controls
-- **Arrow Keys**: Navigate settings
-- **Enter/OK**: Pause/resume slideshow
-- **Menu**: Open settings
-- **Back/Return**: Close settings or go back
-- **Play/Pause**: Control slideshow playback
-
-## Architecture
-
-### Frontend
-- **React 18** with Vite for fast development
-- **exifr** for EXIF data extraction
-- **AWS SDK** for S3 integration
-- TV-optimized UI with remote control navigation
-
-### AWS Infrastructure
-- **S3**: Photo storage with CORS enabled
-- **CloudFront**: Fast global content delivery
-- **Cognito Identity Pool**: Secure, credential-less S3 access
-- **AWS CDK**: Infrastructure as Code
-
-## Prerequisites
-
-- Node.js 18+ and npm
-- AWS Account with CLI configured
+- Node.js 18+
+- AWS account with CLI configured (`aws configure`)
 - AWS CDK CLI (`npm install -g aws-cdk`)
-- Modern LG webOS or Samsung Tizen TV (or any TV with a web browser)
+- A TV with a web browser (or any modern browser)
 
 ## Quick Start
 
-### 1. Clone and Install
+### 1. Clone and install
 
 ```bash
 git clone <repository-url>
@@ -58,101 +28,58 @@ cd tv-photo-slideshow
 npm install
 ```
 
-### 2. Deploy AWS Infrastructure
+### 2. Deploy AWS infrastructure
 
 ```bash
-# Make deploy script executable
 chmod +x scripts/deploy.sh
-
-# Run deployment
 ./scripts/deploy.sh
 ```
 
-This script will:
-- Deploy AWS infrastructure (S3, CloudFront, Cognito)
-- Build the React application
-- Upload to S3
-- Create a `.env` file with AWS configuration
-- Output the CloudFront URL for your app
+This creates S3 buckets, a CloudFront distribution, and a Cognito Identity Pool. It then builds the app and uploads it. At the end it prints a CloudFront URL — that's your app URL.
 
-### 3. Upload Photos
+### 3. Upload photos
 
 ```bash
-# Make upload script executable
 chmod +x scripts/upload-photos.sh
-
-# Upload photos
 ./scripts/upload-photos.sh /path/to/your/photos
 ```
 
-### 4. Open on Your TV
+This syncs photos to S3. On macOS, HEIC files are automatically converted to JPEG before upload.
+
+### 4. Open on your TV
 
 1. Open the web browser on your TV
-2. Navigate to the CloudFront URL provided by the deployment script
-3. Bookmark the URL for easy access
+2. Navigate to the CloudFront URL from step 2
+3. Bookmark it for easy access
 
-### 5. Configure Settings
-
-1. Press the **MENU** button on your TV remote
-2. Enter your S3 bucket name (from deployment output)
-3. Configure display duration, transitions, and EXIF settings
-4. Save and enjoy!
+The slideshow starts automatically. No configuration needed — the S3 bucket is pre-configured from the deploy step.
 
 ## Manual Deployment
 
-If you prefer manual deployment:
-
-### Deploy Infrastructure
+If you'd rather not use the deploy script:
 
 ```bash
+# Deploy infrastructure
 cd aws-infrastructure
 npm install
-cdk bootstrap  # Only needed once per AWS account/region
+cdk bootstrap   # One-time per AWS account/region
 cdk deploy
-```
 
-### Build and Deploy App
-
-```bash
-# Copy environment variables
+# Build app with outputs from CDK
 cp .env.example .env
-
-# Edit .env with values from CDK output
-nano .env
-
-# Build the app
+# Fill in .env with values from CDK output
 npm run build
 
-# Deploy to S3
-aws s3 sync dist/ s3://YOUR-WEBAPP-BUCKET-NAME/ --delete
+# Upload to S3
+aws s3 sync dist/ s3://YOUR-WEBAPP-BUCKET/ --delete
 
 # Invalidate CloudFront cache
 aws cloudfront create-invalidation --distribution-id YOUR-DISTRIBUTION-ID --paths "/*"
 ```
 
-## Configuration
+## Environment Variables
 
-### Application Settings
-
-Configure these in the app's settings UI (accessible via MENU button):
-
-- **S3 Bucket Name**: Your photos bucket name
-- **S3 Region**: AWS region (e.g., us-east-1)
-- **S3 Prefix**: Optional folder path within bucket
-- **Display Duration**: 3-300 seconds per photo
-- **Transition Effect**: fade, slide, or zoom
-- **Shuffle Mode**: Randomize photo order
-- **EXIF Display**:
-  - Enable/disable EXIF overlay
-  - Show/hide date/time
-  - Show/hide location
-  - Show/hide camera info
-  - Overlay position (bottom-left, top-right, etc.)
-  - Auto-hide after delay
-
-### Environment Variables
-
-Create a `.env` file (or copy from `.env.example`):
+Create a `.env` file (or let `deploy.sh` create it automatically):
 
 ```env
 VITE_AWS_IDENTITY_POOL_ID=us-east-1:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -161,185 +88,126 @@ VITE_S3_PHOTOS_BUCKET=tv-slideshow-photos-xxxxxxxxxxxx
 VITE_CLOUDFRONT_DOMAIN=xxxxxxxxxxxxxx.cloudfront.net
 ```
 
-## Development
+These are baked into the build at compile time and set the default config. Users can override S3 bucket and region via the Settings UI on their device; overrides are stored in `localStorage`.
 
-### Local Development
+## AWS Infrastructure
 
-```bash
-# Start dev server
-npm run dev
+Deployed via AWS CDK (`aws-infrastructure/`):
 
-# Open http://localhost:3000
-```
+- **S3 (photos bucket)**: Stores your photos. Private, accessed via Cognito credentials.
+- **S3 (app bucket)**: Hosts the React app.
+- **CloudFront**: CDN in front of both buckets.
+- **Cognito Identity Pool**: Issues temporary read-only credentials to the browser so it can call `ListObjectsV2` on the photos bucket. No login required.
 
-### Build for Production
+## Settings
 
-```bash
-npm run build
-npm run preview
-```
+Press **MENU** on your TV remote to open settings. Available options:
 
-### Deploy Updates
+| Setting | Description |
+|---------|-------------|
+| S3 Bucket / Region / Prefix | Override the compiled-in defaults |
+| Display Duration | Seconds per photo (3–300) |
+| Transition Effect | Fade, slide, or zoom |
+| Shuffle Mode | Randomize photo order |
+| EXIF Display | Enable/disable and configure the metadata overlay |
 
-```bash
-./scripts/deploy.sh
-```
+Settings are saved to `localStorage` on the device.
 
-## TV Platform Compatibility
+## Remote Control
 
-### LG webOS
-- webOS 3.0+ supported
-- Full remote control integration
-- Tested on webOS 4.x, 5.x, 6.x
-
-### Samsung Tizen
-- Tizen 4.0+ supported
-- Full remote control integration
-- Tested on Tizen 5.x, 6.x
-
-### Other Smart TVs
-- Any TV with a modern web browser
-- Keyboard controls as fallback for remote
+| Key | Action |
+|-----|--------|
+| MENU | Open/close settings |
+| Back / Return | Close settings |
+| Left / Right arrow | Previous / next photo |
+| Enter / OK | Pause / resume |
 
 ## Photo Requirements
 
-### Supported Formats
-- JPEG (.jpg, .jpeg)
-- PNG (.png)
-- GIF (.gif)
-- WebP (.webp)
-- HEIC/HEIF (.heic, .heif)
+- Supported formats: JPEG, PNG, WebP
+- HEIC files are converted to JPEG by the upload script (macOS only via `sips`)
+- Recommended resolution: 1920x1080 or higher
+- Keep files under 10 MB for faster loading
+- Include GPS EXIF data if you want location display
 
-### Recommendations
-- Resolution: 1920x1080 or higher for 4K TVs
-- File size: Under 10MB per photo for faster loading
-- EXIF data: Include GPS coordinates for location display
+## Development
+
+```bash
+npm run dev      # Dev server at http://localhost:5173
+npm run build    # Production build
+npm run preview  # Preview production build locally
+npm run lint     # ESLint
+```
+
+The `photoService.mock.js` file provides a mock photo source for local development without needing AWS.
+
+## Project Structure
+
+```
+src/
+  App.jsx                  # Root component, config management
+  components/              # Slideshow, ExifOverlay, Settings
+  services/
+    photoService.js        # S3 photo listing via Cognito
+    configService.js       # localStorage config persistence
+  utils/
+    exifUtils.js           # EXIF extraction + reverse geocoding
+  hooks/
+    useKeyboardNavigation.js  # TV remote key mapping
+
+scripts/
+  deploy.sh                # Full deploy (CDK + build + S3 + CloudFront)
+  upload-photos.sh         # Photo sync with HEIC conversion
+  photo-uploader/          # Node.js CLI for photo validation and upload
+
+aws-infrastructure/        # AWS CDK stack (TypeScript)
+docs/
+  AWS_SETUP.md             # Detailed AWS setup guide
+```
 
 ## Troubleshooting
 
-### Photos Not Loading
-1. Check S3 bucket name in settings
-2. Verify photos are uploaded to the bucket
-3. Ensure AWS credentials are configured
-4. Check browser console for errors
+**No photos show up**
+- Check that photos are in the bucket: `aws s3 ls s3://YOUR-BUCKET/photos/`
+- Verify the S3 bucket name in Settings matches the actual bucket
+- Open the browser console for error details
 
-### EXIF Data Not Showing
-1. Verify photos contain EXIF metadata
-2. Enable EXIF display in settings
-3. Check that date/time or location options are enabled
-4. Some photos may not have GPS data
+**EXIF data not showing**
+- Enable EXIF display in Settings (MENU → EXIF Display)
+- Not all photos have GPS or date data embedded
 
-### Remote Control Not Working
-1. Try keyboard shortcuts as fallback
-2. Restart the TV browser
-3. Check TV platform compatibility
+**Remote not working**
+- Try keyboard: arrow keys, Enter, Escape
+- Restart the TV browser
 
-### Slow Loading
-1. Enable CloudFront (included in CDK deployment)
-2. Optimize photo file sizes
-3. Reduce number of photos in S3 prefix
-4. Check internet connection speed
+**Slow loading**
+- CloudFront caching is enabled by default after the first request
+- Reduce photo file sizes (aim for < 5 MB)
+- Use the `photos/` prefix to limit the listing scope
 
-## Cost Estimation
+## AWS Cost Estimate
 
-### AWS Costs (approximate)
-- **S3 Storage**: ~$0.023/GB/month
-- **CloudFront**: ~$0.085/GB transfer
-- **Cognito**: Free tier (50,000 MAUs)
-- **Total**: ~$5-15/month for typical usage (1000 photos, 100GB transfer)
+| Resource | Cost |
+|----------|------|
+| S3 storage | ~$0.023/GB/month |
+| CloudFront transfer | ~$0.085/GB |
+| Cognito | Free (up to 50,000 MAUs) |
 
-### Cost Optimization
-- Use S3 Intelligent-Tiering for photos
-- Enable CloudFront caching
-- Use smaller image sizes
-- Delete unused photos
+Typical usage (a few hundred photos, personal use): under $1/month.
 
-## Advanced Features
+## Security Notes
 
-### Custom Transitions
-
-Edit `src/components/Slideshow.css` to add custom transition effects.
-
-### Reverse Geocoding
-
-The app uses OpenStreetMap Nominatim for free reverse geocoding. For production with high volume:
-
-1. Use a paid service (Google Maps, Mapbox, HERE)
-2. Update `src/utils/exifUtils.js`
-3. Add API key to `.env`
-
-### Multiple Photo Sources
-
-Modify `src/services/photoService.js` to support:
-- Multiple S3 buckets
-- Different cloud providers
-- Local network storage
-
-## Packaging for TV App Stores
-
-### Samsung Tizen
-
-```bash
-# Install Tizen Studio
-# Package as .wgt file
-tizen package -t wgt -s <certificate-profile>
-
-# Submit to Samsung Seller Office
-```
-
-### LG webOS
-
-```bash
-# Install webOS CLI
-npm install -g @webos-tools/cli
-
-# Package as .ipk file
-ares-package dist/
-
-# Submit to LG Seller Lounge
-```
-
-## Security Considerations
-
-### Production Deployment
-1. Enable authentication in Cognito Identity Pool
-2. Restrict S3 bucket access with fine-grained IAM policies
-3. Use custom domain with HTTPS
-4. Enable CloudFront signed URLs for private photos
-5. Implement rate limiting
-
-### Privacy
-- Photos are stored in your private S3 bucket
-- No data is sent to third parties (except reverse geocoding)
-- All configuration stored locally on TV
+- The Cognito Identity Pool is configured for unauthenticated (public) access — anyone with the URL can list and view your photos.
+- To restrict access, add an authentication provider to the Cognito Identity Pool and configure the identity pool to require authenticated users. See `docs/AWS_SETUP.md`.
+- Photos are not publicly accessible directly from S3; they require the Cognito-issued credentials.
 
 ## Contributing
 
-Contributions are welcome! Please:
-
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+3. Write tests for new behavior
+4. Open a pull request
 
 ## License
 
-MIT License - see LICENSE file for details
-
-## Support
-
-For issues and questions:
-- Open an issue on GitHub
-- Check the troubleshooting section
-- Review AWS documentation for infrastructure questions
-
-## Acknowledgments
-
-- **exifr** for EXIF parsing
-- **AWS CDK** for infrastructure
-- OpenStreetMap Nominatim for geocoding
-- React and Vite communities
-
----
-
-**Enjoy your photos on the big screen!** 📺📸
+MIT — see LICENSE for details.
