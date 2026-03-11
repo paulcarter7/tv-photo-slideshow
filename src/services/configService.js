@@ -135,8 +135,8 @@ export function validateConfig(config) {
     }
   }
 
-  // Validate display duration
-  if (config.displayDuration && (config.displayDuration < 1 || config.displayDuration > 300)) {
+  // Validate display duration — explicit null check so 0 is correctly rejected
+  if (config.displayDuration != null && (config.displayDuration < 1 || config.displayDuration > 300)) {
     return false;
   }
 
