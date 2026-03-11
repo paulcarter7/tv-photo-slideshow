@@ -58,3 +58,9 @@ Thumbs.db
 # Local test photos
 test-photos/
 photos/
+
+# AWS CLI installer binary
+AWSCLIV2.pkg
+
+# Test environment (no secrets, but .env files shouldn't be committed)
+.env.test
