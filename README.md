@@ -18,6 +18,8 @@ A fullscreen photo slideshow app designed for smart TV browsers (LG webOS, Samsu
 - AWS CDK CLI (`npm install -g aws-cdk`)
 - A TV with a web browser (or any modern browser)
 
+New to AWS? See [`docs/AWS_SETUP.md`](docs/AWS_SETUP.md) for a full account and credential setup walkthrough.
+
 ## Quick Start
 
 ### 1. Clone and install
